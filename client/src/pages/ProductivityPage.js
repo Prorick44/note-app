@@ -9,8 +9,9 @@ export default function ProductivityPage() {
   ).userId;
 
   useEffect(() => {
+    if (!userId) return;
     API.get(`/notes/${userId}`).then((res) => setNotes(res.data));
-  }, []);
+  }, [userId]);
 
   const productivityScore = () => {
     let score = 0;

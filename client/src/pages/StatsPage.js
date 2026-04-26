@@ -9,8 +9,9 @@ export default function StatsPage() {
   ).userId;
 
   useEffect(() => {
+    if (!userId) return;
     API.get(`/notes/${userId}`).then((res) => setNotes(res.data));
-  }, []);
+  }, [userId]);
 
   const totalWords = notes.reduce(
     (sum, n) => sum + (n.content?.split(" ").length || 0),

@@ -10,7 +10,7 @@ export default function Home() {
     if (!isLoggedIn()) {
       navigate("/login");
     }
-  }, []);
+  }, [navigate]);
 
   return (
     <Layout>

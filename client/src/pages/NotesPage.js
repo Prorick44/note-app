@@ -11,8 +11,9 @@ export default function NotesPage() {
   ).userId;
 
   useEffect(() => {
+    if (!userId) return;
     API.get(`/notes/${userId}`).then((res) => setNotes(res.data));
-  }, []);
+  }, [userId]);
 
   const createNote = async () => {
     const res = await API.post("/notes", {
