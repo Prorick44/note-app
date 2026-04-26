@@ -4,18 +4,22 @@ import { getToken } from "../utils/auth";
 
 export default function Dashboard() {
   const [notes, setNotes] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [content, setContent] = useState("");
 
-  const userId = JSON.parse(atob(getToken().split(".")[1])).userId;
+  const token = getToken();
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).userId : null;
 
-  // load notes
+  // READ
   useEffect(() => {
+    if (!userId) return;
+
     API.get(`/notes/${userId}`).then((res) => {
       setNotes(res.data);
     });
-  }, []);
+  }, [userId]);
 
-  // create note
+  // CREATE
   const createNote = async () => {
     const res = await API.post("/notes", {
       userId,
@@ -23,58 +27,67 @@ export default function Dashboard() {
       content: "",
     });
 
-    setNotes([...notes, res.data]);
+    setNotes([res.data, ...notes]);
+    setSelectedId(res.data._id);
+    setContent("");
   };
 
-  // update note
-  const updateNote = async (value) => {
-    const updated = await API.put(`/notes/${selected._id}`, {
-      ...selected,
-      content: value,
+  // SELECT
+  const selectNote = (note) => {
+    setSelectedId(note._id);
+    setContent(note.content);
+  };
+
+  // UPDATE
+  const saveNote = async () => {
+    const res = await API.put(`/notes/${selectedId}`, {
+      content,
     });
 
-    setSelected(updated.data);
+    setNotes((prev) => prev.map((n) => (n._id === selectedId ? res.data : n)));
+  };
 
-    setNotes((prev) =>
-      prev.map((n) => (n._id === updated.data._id ? updated.data : n)),
-    );
+  // DELETE
+  const deleteNote = async (id) => {
+    await API.delete(`/notes/${id}`);
+
+    setNotes((prev) => prev.filter((n) => n._id !== id));
+
+    if (selectedId === id) {
+      setSelectedId(null);
+      setContent("");
+    }
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ display: "flex", height: "100vh" }}>
       {/* SIDEBAR */}
-      <div style={styles.sidebar}>
-        <h3>📄 Notes</h3>
+      <div style={{ width: 250, background: "#222", color: "white" }}>
+        <button onClick={createNote}>+ New</button>
 
-        <button onClick={createNote} style={styles.addBtn}>
-          + New Note
-        </button>
+        {notes.map((n) => (
+          <div key={n._id} style={{ display: "flex" }}>
+            <div onClick={() => selectNote(n)}>{n.title}</div>
 
-        {notes.map((note) => (
-          <div
-            key={note._id}
-            style={styles.noteItem}
-            onClick={() => setSelected(note)}
-          >
-            {note.title}
+            <button onClick={() => deleteNote(n._id)}>X</button>
           </div>
         ))}
       </div>
 
       {/* EDITOR */}
-      <div style={styles.editor}>
-        {selected ? (
+      <div style={{ flex: 1, padding: 20 }}>
+        {selectedId ? (
           <>
-            <h2>{selected.title}</h2>
-
             <textarea
-              style={styles.textarea}
-              value={selected.content}
-              onChange={(e) => updateNote(e.target.value)}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              style={{ width: "100%", height: 400 }}
             />
+
+            <button onClick={saveNote}>Save</button>
           </>
         ) : (
-          <h2>Select a note</h2>
+          <h3>Select a note</h3>
         )}
       </div>
     </div>
@@ -82,10 +95,7 @@ export default function Dashboard() {
 }
 
 const styles = {
-  container: {
-    display: "flex",
-    height: "100vh",
-  },
+  container: { display: "flex", height: "100vh" },
 
   sidebar: {
     width: "250px",
@@ -94,10 +104,7 @@ const styles = {
     padding: "15px",
   },
 
-  editor: {
-    flex: 1,
-    padding: "20px",
-  },
+  editor: { flex: 1, padding: "20px" },
 
   addBtn: {
     width: "100%",
@@ -106,14 +113,31 @@ const styles = {
   },
 
   noteItem: {
+    display: "flex",
+    justifyContent: "space-between",
     padding: "8px",
-    cursor: "pointer",
     borderBottom: "1px solid #333",
+    cursor: "pointer",
+  },
+
+  delBtn: {
+    background: "red",
+    color: "white",
+    border: "none",
+    cursor: "pointer",
   },
 
   textarea: {
     width: "100%",
     height: "80vh",
     fontSize: "16px",
+  },
+
+  saveBtn: {
+    marginTop: "10px",
+    padding: "10px",
+    background: "#4f46e5",
+    color: "white",
+    border: "none",
   },
 };

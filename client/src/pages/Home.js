@@ -22,19 +22,28 @@ export default function Home() {
           <div style={styles.card}>
             <h3>📝 Notes</h3>
             <p>Create and manage notes</p>
-            <button style={styles.btn}>Open</button>
+            <button style={styles.btn} onClick={() => navigate("/notes")}>
+              Open
+            </button>
           </div>
 
           <div style={styles.card}>
             <h3>📊 Analytics</h3>
             <p>Track usage stats</p>
-            <button style={styles.btn}>View</button>
+            <button style={styles.btn} onClick={() => navigate("/stats")}>
+              View
+            </button>
           </div>
 
           <div style={styles.card}>
             <h3>⚡ Productivity</h3>
             <p>Boost workflow</p>
-            <button style={styles.btn}>Go</button>
+            <button
+              style={styles.btn}
+              onClick={() => navigate("/productivity")}
+            >
+              Go
+            </button>
           </div>
         </div>
       </div>

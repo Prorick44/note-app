@@ -4,14 +4,9 @@ const API = axios.create({
   baseURL: "https://note-app-e4ff.onrender.com/api",
 });
 
-// attach token automatically
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
-
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
-  }
-
+  if (token) req.headers.Authorization = `Bearer ${token}`;
   return req;
 });
 

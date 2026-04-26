@@ -1,40 +1,32 @@
-const express = require("express");
-const Note = require("../models/Note");
+import express from "express";
+import Note from "../models/Note.js";
 
 const router = express.Router();
 
-// CREATE NOTE
-router.post("/", async (req, res) => {
-  const { userId, title, content } = req.body;
-
-  const note = await Note.create({
-    userId,
-    title,
-    content,
-  });
-
-  res.json(note);
-});
-
-// GET ALL NOTES
+// READ ALL
 router.get("/:userId", async (req, res) => {
   const notes = await Note.find({ userId: req.params.userId });
   res.json(notes);
 });
 
-// UPDATE NOTE
-router.put("/:id", async (req, res) => {
-  const note = await Note.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-
+// CREATE
+router.post("/", async (req, res) => {
+  const note = await Note.create(req.body);
   res.json(note);
 });
 
-// DELETE NOTE
-router.delete("/:id", async (req, res) => {
-  await Note.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted" });
+// UPDATE
+router.put("/:id", async (req, res) => {
+  const updated = await Note.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+  });
+  res.json(updated);
 });
 
-module.exports = router;
+// DELETE
+router.delete("/:id", async (req, res) => {
+  await Note.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
+
+export default router;
