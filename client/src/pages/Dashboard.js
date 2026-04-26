@@ -7,84 +7,127 @@ export default function Dashboard() {
   const [selectedId, setSelectedId] = useState(null);
   const [content, setContent] = useState("");
 
+  // SAFE TOKEN PARSE
   const token = getToken();
-  const userId = token ? JSON.parse(atob(token.split(".")[1])).userId : null;
 
-  // READ
+  let userId = null;
+  try {
+    userId = token ? JSON.parse(atob(token.split(".")[1])).userId : null;
+  } catch (err) {
+    console.log("Invalid token");
+  }
+
+  // READ NOTES
   useEffect(() => {
     if (!userId) return;
 
-    API.get(`/notes/${userId}`).then((res) => {
-      setNotes(res.data);
-    });
+    const fetchNotes = async () => {
+      try {
+        const res = await API.get(`/notes/${userId}`);
+        setNotes(res.data);
+      } catch (err) {
+        console.log("Fetch error:", err.message);
+      }
+    };
+
+    fetchNotes();
   }, [userId]);
 
-  // CREATE
+  // CREATE NOTE
   const createNote = async () => {
-    const res = await API.post("/notes", {
-      userId,
-      title: "New Note",
-      content: "",
-    });
+    try {
+      const res = await API.post("/notes", {
+        userId,
+        title: "New Note",
+        content: "",
+      });
 
-    setNotes([res.data, ...notes]);
-    setSelectedId(res.data._id);
-    setContent("");
+      setNotes((prev) => [res.data, ...prev]);
+      setSelectedId(res.data._id);
+      setContent("");
+    } catch (err) {
+      console.log("Create error:", err.message);
+    }
   };
 
-  // SELECT
+  // SELECT NOTE
   const selectNote = (note) => {
     setSelectedId(note._id);
-    setContent(note.content);
+    setContent(note.content || "");
   };
 
-  // UPDATE
+  // SAVE NOTE
   const saveNote = async () => {
-    const res = await API.put(`/notes/${selectedId}`, {
-      content,
-    });
+    try {
+      const res = await API.put(`/notes/${selectedId}`, {
+        content,
+      });
 
-    setNotes((prev) => prev.map((n) => (n._id === selectedId ? res.data : n)));
+      setNotes((prev) =>
+        prev.map((n) => (n._id === selectedId ? res.data : n)),
+      );
+    } catch (err) {
+      console.log("Save error:", err.message);
+    }
   };
 
-  // DELETE
+  // DELETE NOTE
   const deleteNote = async (id) => {
-    await API.delete(`/notes/${id}`);
+    try {
+      await API.delete(`/notes/${id}`);
 
-    setNotes((prev) => prev.filter((n) => n._id !== id));
+      setNotes((prev) => prev.filter((n) => n._id !== id));
 
-    if (selectedId === id) {
-      setSelectedId(null);
-      setContent("");
+      if (selectedId === id) {
+        setSelectedId(null);
+        setContent("");
+      }
+    } catch (err) {
+      console.log("Delete error:", err.message);
     }
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <div style={styles.container}>
       {/* SIDEBAR */}
-      <div style={{ width: 250, background: "#222", color: "white" }}>
-        <button onClick={createNote}>+ New</button>
+      <div style={styles.sidebar}>
+        <h3>📝 Notes</h3>
 
-        {notes.map((n) => (
-          <div key={n._id} style={{ display: "flex" }}>
-            <div onClick={() => selectNote(n)}>{n.title}</div>
+        <button style={styles.addBtn} onClick={createNote}>
+          + New Note
+        </button>
 
-            <button onClick={() => deleteNote(n._id)}>X</button>
+        {notes.map((note) => (
+          <div key={note._id} style={styles.noteItem}>
+            <span
+              onClick={() => selectNote(note)}
+              style={{ cursor: "pointer" }}
+            >
+              {note.title}
+            </span>
+
+            <button onClick={() => deleteNote(note._id)} style={styles.delBtn}>
+              ❌
+            </button>
           </div>
         ))}
       </div>
 
       {/* EDITOR */}
-      <div style={{ flex: 1, padding: 20 }}>
+      <div style={styles.editor}>
         {selectedId ? (
           <>
+            <h3>Edit Note</h3>
+
             <textarea
+              style={styles.textarea}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              style={{ width: "100%", height: 400 }}
             />
 
-            <button onClick={saveNote}>Save</button>
+            <button onClick={saveNote} style={styles.saveBtn}>
+              💾 Save
+            </button>
           </>
         ) : (
           <h3>Select a note</h3>
@@ -94,22 +137,31 @@ export default function Dashboard() {
   );
 }
 
+/* ✅ USED STYLES (no ESLint error anymore) */
 const styles = {
-  container: { display: "flex", height: "100vh" },
+  container: {
+    display: "flex",
+    height: "100vh",
+    fontFamily: "Arial",
+  },
 
   sidebar: {
     width: "250px",
-    background: "#1f1f1f",
+    background: "#111",
     color: "white",
     padding: "15px",
   },
 
-  editor: { flex: 1, padding: "20px" },
+  editor: {
+    flex: 1,
+    padding: "20px",
+  },
 
   addBtn: {
     width: "100%",
     padding: "10px",
     marginBottom: "10px",
+    cursor: "pointer",
   },
 
   noteItem: {
@@ -117,7 +169,6 @@ const styles = {
     justifyContent: "space-between",
     padding: "8px",
     borderBottom: "1px solid #333",
-    cursor: "pointer",
   },
 
   delBtn: {
@@ -131,13 +182,15 @@ const styles = {
     width: "100%",
     height: "80vh",
     fontSize: "16px",
+    padding: "10px",
   },
 
   saveBtn: {
     marginTop: "10px",
-    padding: "10px",
+    padding: "10px 15px",
     background: "#4f46e5",
     color: "white",
     border: "none",
+    cursor: "pointer",
   },
 };
