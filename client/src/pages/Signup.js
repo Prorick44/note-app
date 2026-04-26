@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const [username, setUsername] = useState("");
@@ -10,17 +10,14 @@ export default function Signup() {
 
   const handleSignup = async () => {
     try {
-      const res = await API.post("/auth/signup", {
+      await API.post("/auth/signup", {
         username,
         password,
       });
 
-      console.log("SIGNUP SUCCESS:", res.data);
-
-      alert("Signup successful!");
+      alert("Signup successful");
       navigate("/login");
     } catch (err) {
-      console.log(err.response?.data || err.message);
       alert("Signup failed");
     }
   };
@@ -33,7 +30,6 @@ export default function Signup() {
         placeholder="username"
         onChange={(e) => setUsername(e.target.value)}
       />
-
       <input
         type="password"
         placeholder="password"

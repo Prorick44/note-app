@@ -1,19 +1,15 @@
-import { useEffect, useState } from "react";
-import { getProtected } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
-  const [msg, setMsg] = useState("");
-
-  useEffect(() => {
-    getProtected()
-      .then((res) => setMsg(res.data.message))
-      .catch(() => setMsg("Not logged in"));
-  }, []);
+  const navigate = useNavigate();
 
   return (
     <div>
       <h1>Home</h1>
-      <p>{msg}</p>
+
+      <button onClick={() => navigate("/login")}>Login</button>
+
+      <button onClick={() => navigate("/signup")}>Signup</button>
     </div>
   );
 }
